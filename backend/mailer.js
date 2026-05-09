@@ -1,15 +1,6 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,       // 587 用 STARTTLS，不是直接 SSL
-  family: 4,           // 強制 IPv4，避免 Railway 的 IPv6 路由問題
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * 寄送 Email 驗證信
@@ -21,8 +12,8 @@ async function sendVerificationEmail(toEmail, username, token) {
   const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
   const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
-  await transporter.sendMail({
-    from: `"環保餐具借還系統" <${process.env.GMAIL_USER}>`,
+  await resend.emails.send({
+    from: 'onboarding@resend.dev',   // 免費帳號用此寄件地址
     to: toEmail,
     subject: '【環保餐具借還系統】請驗證您的電子郵件',
     html: `
