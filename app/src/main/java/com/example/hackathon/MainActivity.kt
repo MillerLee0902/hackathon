@@ -66,6 +66,11 @@ class MainActivity : ComponentActivity() {
                         composable("dashboard") {
                             DashboardScreen(
                                 onNavigateToTransactions = { navController.navigate("transactions") },
+                                onNavigateToStaffDashboard = {
+                                    navController.navigate("staffDashboard") {
+                                        popUpTo("dashboard") { inclusive = true }
+                                    }
+                                },
                                 onLogout = {
                                     session.clearAll()
                                     navController.navigate("login") {

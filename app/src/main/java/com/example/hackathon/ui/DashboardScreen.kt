@@ -33,6 +33,7 @@ import java.util.EnumMap
 @Composable
 fun DashboardScreen(
     onNavigateToTransactions: () -> Unit,
+    onNavigateToStaffDashboard: () -> Unit = {},
     onLogout: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -52,7 +53,16 @@ fun DashboardScreen(
                 val token = session.getToken() ?: return@launch
                 // 同時載入用戶資料與 QR Code
                 val meResp = RetrofitClient.api.getMe(token)
-                if (meResp.isSuccessful) userInfo = meResp.body()
+                if (meResp.isSuccessful) {
+                    val info = meResp.body()
+                    // 若 DB 裡的 role 是 staff/admin，更新 session 並重導向
+                    if (info?.role == "staff" || info?.role == "admin") {
+                        session.saveRole(info.role)
+                        onNavigateToStaffDashboard()
+                        return@launch
+                    }
+                    userInfo = info
+                }
 
                 val qrResp = RetrofitClient.api.getMyQrCode(token)
                 if (qrResp.isSuccessful && qrResp.body() != null) {
@@ -143,7 +153,9 @@ fun DashboardScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

@@ -8,7 +8,7 @@ router.use(auth);
 router.get('/me', async (req, res) => {
   try {
     const userResult = await pool.query(
-      'SELECT id, username, email, points, wallet_balance FROM users WHERE id = $1',
+      'SELECT id, username, email, points, wallet_balance, role FROM users WHERE id = $1',
       [req.user.id]
     );
     if (userResult.rows.length === 0) {
@@ -26,6 +26,7 @@ router.get('/me', async (req, res) => {
       points: user.points,
       walletBalance: parseFloat(user.wallet_balance),
       borrowedCount: parseInt(borrowResult.rows[0].count),
+      role: user.role || req.user.role || 'user',
     });
   } catch (err) {
     console.error(err);

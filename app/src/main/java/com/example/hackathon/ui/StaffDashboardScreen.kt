@@ -41,7 +41,7 @@ fun StaffDashboardScreen(
 
     // 切換到記錄/餐具 tab 時自動載入
     LaunchedEffect(selectedTab) {
-        val token = "Bearer ${session.getToken()}" ?: return@LaunchedEffect
+        val token = session.getToken() ?: return@LaunchedEffect
         isLoading = true
         errorMsg = ""
         try {
