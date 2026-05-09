@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { pool } = require('../database');
 const { JWT_SECRET } = require('../middleware/auth');
-const { sendVerificationEmail } = require('../mailer');
+// const { sendVerificationEmail } = require('../mailer'); // [Email驗證暫時停用]
 
 const router = express.Router();
 
@@ -28,27 +28,27 @@ router.post('/register', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 產生 24 小時有效的驗證 token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    // [Email驗證暫時停用] 直接設定 email_verified = TRUE，省略驗證 token 流程
+    // const verificationToken = crypto.randomBytes(32).toString('hex');
+    // const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await pool.query(
       `INSERT INTO users
          (username, email, password_hash, email_verified, verification_token, verification_token_expires)
-       VALUES ($1, $2, $3, FALSE, $4, $5)`,
-      [username, email, passwordHash, verificationToken, tokenExpires]
+       VALUES ($1, $2, $3, TRUE, NULL, NULL)`,
+      [username, email, passwordHash]
     );
 
-    // 寄驗證信（失敗不中斷流程，僅 log）
-    try {
-      await sendVerificationEmail(email, username, verificationToken);
-    } catch (mailErr) {
-      console.error('驗證信寄送失敗:', mailErr.message);
-    }
+    // [Email驗證暫時停用] 不寄驗證信
+    // try {
+    //   await sendVerificationEmail(email, username, verificationToken);
+    // } catch (mailErr) {
+    //   console.error('驗證信寄送失敗:', mailErr.message);
+    // }
 
     res.status(201).json({
       success: true,
-      message: '註冊成功！請前往您的 Gmail 信箱點擊驗證連結後，即可登入。',
+      message: '註冊成功！請直接登入。',
     });
   } catch (err) {
     console.error(err);
@@ -80,14 +80,14 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: '帳號或密碼錯誤' });
     }
 
-    // 檢查是否已驗證 Email
-    if (!user.email_verified) {
-      return res.status(403).json({
-        success: false,
-        message: '尚未驗證電子郵件，請前往 Gmail 點擊驗證連結',
-        emailNotVerified: true,
-      });
-    }
+    // [Email驗證暫時停用] 略過 email_verified 檢查
+    // if (!user.email_verified) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: '尚未驗證電子郵件，請前往 Gmail 點擊驗證連結',
+    //     emailNotVerified: true,
+    //   });
+    // }
 
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
@@ -158,45 +158,41 @@ router.get('/verify-email', async (req, res) => {
 
 // ────────────────────────────────────────────────
 // POST /api/auth/resend-verification
-// 重新寄送驗證信
+// [Email驗證暫時停用] 此端點暫時停用
 // ────────────────────────────────────────────────
 router.post('/resend-verification', async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ success: false, message: '請提供電子郵件' });
-  }
+  // [Email驗證暫時停用]
+  return res.json({ success: true, message: 'Email 驗證功能暫時停用，請直接登入。' });
 
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (result.rows.length === 0) {
-      // 不揭露帳號是否存在
-      return res.json({ success: true, message: '若帳號存在，驗證信已重新寄出。' });
-    }
-
-    const user = result.rows[0];
-    if (user.email_verified) {
-      return res.json({ success: true, message: '此帳號已完成驗證，請直接登入。' });
-    }
-
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    await pool.query(
-      `UPDATE users SET verification_token = $1, verification_token_expires = $2 WHERE id = $3`,
-      [verificationToken, tokenExpires, user.id]
-    );
-
-    try {
-      await sendVerificationEmail(email, user.username, verificationToken);
-    } catch (mailErr) {
-      console.error('驗證信寄送失敗:', mailErr.message);
-    }
-
-    res.json({ success: true, message: '驗證信已重新寄出，請檢查您的信箱。' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: '伺服器錯誤' });
-  }
+  // const { email } = req.body;
+  // if (!email) {
+  //   return res.status(400).json({ success: false, message: '請提供電子郵件' });
+  // }
+  // try {
+  //   const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  //   if (result.rows.length === 0) {
+  //     return res.json({ success: true, message: '若帳號存在，驗證信已重新寄出。' });
+  //   }
+  //   const user = result.rows[0];
+  //   if (user.email_verified) {
+  //     return res.json({ success: true, message: '此帳號已完成驗證，請直接登入。' });
+  //   }
+  //   const verificationToken = crypto.randomBytes(32).toString('hex');
+  //   const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  //   await pool.query(
+  //     `UPDATE users SET verification_token = $1, verification_token_expires = $2 WHERE id = $3`,
+  //     [verificationToken, tokenExpires, user.id]
+  //   );
+  //   try {
+  //     await sendVerificationEmail(email, user.username, verificationToken);
+  //   } catch (mailErr) {
+  //     console.error('驗證信寄送失敗:', mailErr.message);
+  //   }
+  //   res.json({ success: true, message: '驗證信已重新寄出，請檢查您的信箱。' });
+  // } catch (err) {
+  //   console.error(err);
+  //   res.status(500).json({ success: false, message: '伺服器錯誤' });
+  // }
 });
 
 // ────────────────────────────────────────────────
