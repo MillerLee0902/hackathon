@@ -21,6 +21,7 @@ import com.example.hackathon.model.ReturnRequest
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 @Composable
 fun StaffReturnScreen(onBack: () -> Unit) {
@@ -195,9 +196,14 @@ fun StaffReturnScreen(onBack: () -> Unit) {
                         Button(
                             onClick = {
                                 isLoading = true
+                                resultMessage = ""
                                 scope.launch {
                                     try {
-                                        val token = "Bearer ${session.getToken()}"
+                                        val token = session.getToken() ?: run {
+                                            resultMessage = "請重新登入"
+                                            isLoading = false
+                                            return@launch
+                                        }
                                         val response = RetrofitClient.api.staffReturn(
                                             token, ReturnRequest(userQrCode, utensilQrCode)
                                         )
@@ -214,7 +220,10 @@ fun StaffReturnScreen(onBack: () -> Unit) {
                                             )
                                             step = 3
                                         } else {
-                                            resultMessage = response.body()?.message ?: "回收失敗"
+                                            resultMessage = response.body()?.message
+                                                ?: runCatching {
+                                                    JSONObject(response.errorBody()?.string() ?: "").optString("message", "回收失敗")
+                                                }.getOrDefault("回收失敗")
                                         }
                                     } catch (e: Exception) {
                                         resultMessage = "連線失敗：${e.message}"
