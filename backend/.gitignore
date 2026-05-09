@@ -1,0 +1,19 @@
+# 依賴套件
+node_modules/
+
+# 環境變數（含機密）— .env.example 可以 commit，.env 不行
+.env
+.env.local
+.env.*.local
+
+# 舊版資料檔（已改用 PostgreSQL）
+data.json
+
+# 伺服器 log（本機產生的執行紀錄）
+*.log
+*.err
+server.log
+server.err
+
+# 建置輸出
+dist/

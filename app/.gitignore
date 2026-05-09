@@ -1,0 +1,7 @@
+# 建置輸出
+/build
+
+# Android 簽署金鑰 — 絕對不能上版控
+*.keystore
+*.jks
+keystore.properties
