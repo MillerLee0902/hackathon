@@ -18,7 +18,12 @@ data class AuthResponse(
     val token: String?,
     val user: UserInfo?,
     val message: String?,
+    val emailNotVerified: Boolean? = null,
 )
+
+data class ResendVerificationRequest(val email: String)
+
+data class SimpleResponse(val success: Boolean, val message: String?)
 
 data class BorrowRequest(val utensilQrCode: String)
 

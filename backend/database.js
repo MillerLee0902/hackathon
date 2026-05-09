@@ -14,8 +14,19 @@ async function initDb() {
       password_hash VARCHAR(255) NOT NULL,
       points INTEGER DEFAULT 0,
       wallet_balance DECIMAL(10,2) DEFAULT 100.00,
+      email_verified BOOLEAN DEFAULT FALSE,
+      verification_token VARCHAR(255),
+      verification_token_expires TIMESTAMP WITH TIME ZONE,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )
+  `);
+
+  // 若資料表已存在（舊版本），補上新欄位
+  await pool.query(`
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE
   `);
 
   await pool.query(`

@@ -12,6 +12,9 @@ interface ApiService {
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
 
+    @POST("api/auth/resend-verification")
+    suspend fun resendVerification(@Body request: ResendVerificationRequest): Response<SimpleResponse>
+
     @GET("api/users/me")
     suspend fun getMe(@Header("Authorization") token: String): Response<UserInfo>
 
