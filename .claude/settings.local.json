@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(Start-Sleep -Milliseconds 2000; Invoke-RestMethod -Uri \"http://localhost:3000/\" -Method Get)",
-      "PowerShell(Stop-Process *)"
-    ]
-  }
-}
