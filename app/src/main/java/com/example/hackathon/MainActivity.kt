@@ -67,7 +67,6 @@ class MainActivity : ComponentActivity() {
                             DashboardScreen(
                                 onNavigateToBorrow = { navController.navigate("borrow") },
                                 onNavigateToReturn = { navController.navigate("return") },
-                                onNavigateToMyQrCode = { navController.navigate("myqrcode") },
                                 onNavigateToTransactions = { navController.navigate("transactions") },
                                 onLogout = {
                                     session.clearAll()
@@ -84,10 +83,6 @@ class MainActivity : ComponentActivity() {
 
                         composable("return") {
                             ReturnScreen(onBack = { navController.popBackStack() })
-                        }
-
-                        composable("myqrcode") {
-                            MyQrCodeScreen(onBack = { navController.popBackStack() })
                         }
 
                         composable("transactions") {

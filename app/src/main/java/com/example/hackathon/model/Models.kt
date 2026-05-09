@@ -59,6 +59,15 @@ data class Transaction(
 
 data class QrCodeResponse(val qrData: String)
 
+// 一般用戶可見的餐具資訊（GET /api/utensils）
+data class Utensil(
+    val id: Int,
+    val qrCode: String,
+    val type: String,
+    val status: String,         // "available" | "borrowed"
+    val depositAmount: Double,
+)
+
 data class ApiError(val success: Boolean, val message: String)
 
 // ── 店員專用 ──────────────────────────────────────────────

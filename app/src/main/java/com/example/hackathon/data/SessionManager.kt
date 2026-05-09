@@ -16,5 +16,8 @@ class SessionManager(context: Context) {
     fun getRole(): String = prefs.getString("role", "user") ?: "user"
     fun isStaff(): Boolean = getRole() == "staff" || getRole() == "admin"
 
+    fun saveUserId(id: Int) = prefs.edit().putInt("userId", id).apply()
+    fun getUserId(): Int = prefs.getInt("userId", 0)
+
     fun clearAll() = prefs.edit().clear().apply()
 }

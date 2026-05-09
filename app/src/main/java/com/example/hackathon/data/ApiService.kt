@@ -24,6 +24,9 @@ interface ApiService {
     @GET("api/users/transactions")
     suspend fun getTransactions(@Header("Authorization") token: String): Response<List<Transaction>>
 
+    @GET("api/utensils")
+    suspend fun getUtensils(@Header("Authorization") token: String): Response<List<Utensil>>
+
     @POST("api/borrow/borrow")
     suspend fun borrowUtensil(
         @Header("Authorization") token: String,

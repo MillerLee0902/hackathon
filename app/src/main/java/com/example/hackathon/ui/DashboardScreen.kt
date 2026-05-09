@@ -22,7 +22,6 @@ import kotlinx.coroutines.launch
 fun DashboardScreen(
     onNavigateToBorrow: () -> Unit,
     onNavigateToReturn: () -> Unit,
-    onNavigateToMyQrCode: () -> Unit,
     onNavigateToTransactions: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -90,7 +89,23 @@ fun DashboardScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Text("您好，${user.username}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    // 身分資訊
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(40.dp),
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(user.username, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(user.email, fontSize = 13.sp, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
+                            Text("ID：${user.id}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         StatItem(label = "點數", value = "${user.points} pt", icon = Icons.Default.Star)
@@ -120,7 +135,7 @@ fun DashboardScreen(
             Text("功能選單", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 功能按鈕
+            // 功能按鈕（上排：借用 + 歸還）
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MenuButton(
                     modifier = Modifier.weight(1f),
@@ -140,23 +155,15 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MenuButton(
-                    modifier = Modifier.weight(1f),
-                    label = "我的 QR Code",
-                    icon = Icons.Default.QrCode,
-                    onClick = onNavigateToMyQrCode,
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                )
-                MenuButton(
-                    modifier = Modifier.weight(1f),
-                    label = "交易記錄",
-                    icon = Icons.Default.List,
-                    onClick = onNavigateToTransactions,
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            // 下排：交易記錄（全寬）
+            MenuButton(
+                modifier = Modifier.fillMaxWidth(),
+                label = "交易記錄",
+                icon = Icons.Default.List,
+                onClick = onNavigateToTransactions,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

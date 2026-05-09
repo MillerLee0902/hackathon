@@ -140,6 +140,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onNavigateToRegister: ()
                             session.saveToken("Bearer ${body.token!!}")
                             val role = body.user?.role ?: "user"
                             session.saveRole(role)
+                            session.saveUserId(body.user?.id ?: 0)
                             onLoginSuccess(role)
                         } else {
                             // 解析 errorBody（4xx 時 body() 為 null）
