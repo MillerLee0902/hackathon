@@ -11,6 +11,7 @@ app.use('/api/users',    require('./routes/users'));
 app.use('/api/utensils', require('./routes/utensils'));
 app.use('/api/borrow',   require('./routes/borrow'));
 app.use('/api/lottery',  require('./routes/lottery'));
+app.use('/api/staff',    require('./routes/staff'));
 
 app.get('/', (req, res) => res.json({ message: 'Eco Utensil API OK' }));
 

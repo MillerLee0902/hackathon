@@ -14,8 +14,14 @@ async function initDb() {
       password_hash VARCHAR(255) NOT NULL,
       points INTEGER DEFAULT 0,
       wallet_balance DECIMAL(10,2) DEFAULT 100.00,
+      role VARCHAR(20) DEFAULT 'user',
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )
+  `);
+
+  // 若已存在舊資料表，補上 role 欄位（Migration）
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'
   `);
 
   await pool.query(`

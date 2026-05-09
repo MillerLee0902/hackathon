@@ -48,7 +48,8 @@ router.post('/login', async (req, res) => {
     if (!valid) {
       return res.status(401).json({ success: false, message: 'Wrong email or password' });
     }
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const role = user.role || 'user';
+    const token = jwt.sign({ id: user.id, email: user.email, role }, JWT_SECRET, { expiresIn: '7d' });
     res.json({
       success: true,
       token,
@@ -58,6 +59,7 @@ router.post('/login', async (req, res) => {
         email: user.email,
         points: user.points,
         walletBalance: parseFloat(user.wallet_balance),
+        role,
       },
     });
   } catch (err) {
