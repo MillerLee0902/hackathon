@@ -53,10 +53,15 @@ async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS lottery_numbers (
       id SERIAL PRIMARY KEY,
-      ticket_number VARCHAR(10) UNIQUE NOT NULL,
+      ticket_number VARCHAR(20) UNIQUE NOT NULL,
       utensil_id INTEGER REFERENCES utensils(id),
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )
+  `);
+
+  // Migration：補上 return_quantity 欄位
+  await pool.query(`
+    ALTER TABLE utensils ADD COLUMN IF NOT EXISTS return_quantity INTEGER DEFAULT 0
   `);
 
   const utensils = [

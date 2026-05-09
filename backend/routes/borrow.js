@@ -56,7 +56,10 @@ router.post('/return', async (req, res) => {
     if (utensil.status === 'available') { await client.query('ROLLBACK'); return res.status(400).json({ success: false, message: 'Utensil not borrowed' }); }
     if (utensil.current_borrower_id !== borrowerUserId) { await client.query('ROLLBACK'); return res.status(400).json({ success: false, message: 'This utensil was not borrowed by this user' }); }
 
-    await client.query("UPDATE utensils SET status = 'available', current_borrower_id = NULL, borrowed_at = NULL WHERE id = $1", [utensil.id]);
+    await client.query(
+      "UPDATE utensils SET status = 'available', current_borrower_id = NULL, borrowed_at = NULL, return_quantity = return_quantity + 1 WHERE id = $1",
+      [utensil.id]
+    );
     const updatedUser = await client.query(
       'UPDATE users SET wallet_balance = wallet_balance + $1, points = points + 1 WHERE id = $2 RETURNING username, wallet_balance, points',
       [utensil.deposit_amount, borrowerUserId]

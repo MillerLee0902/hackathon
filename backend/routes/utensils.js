@@ -5,22 +5,29 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 router.use(auth);
 
-async function generateUniqueLotteryNumber(client) {
-  let ticket, conflict = true;
-  while (conflict) {
-    ticket = String(Math.floor(100000 + Math.random() * 900000));
-    const check = await client.query(
-      'SELECT 1 FROM lottery_numbers WHERE ticket_number = $1', [ticket]
+// 流水編號：查目前最大號碼後依序累加
+async function generateSequentialTickets(client, count, utensilId) {
+  const maxRes = await client.query(
+    `SELECT COALESCE(MAX(CAST(ticket_number AS BIGINT)), 0) AS max_num FROM lottery_numbers`
+  );
+  let nextNum = parseInt(maxRes.rows[0].max_num) + 1;
+  const tickets = [];
+  for (let i = 0; i < count; i++) {
+    const ticket = String(nextNum).padStart(6, '0');
+    await client.query(
+      'INSERT INTO lottery_numbers (ticket_number, utensil_id) VALUES ($1, $2)',
+      [ticket, utensilId]
     );
-    conflict = check.rows.length > 0;
+    tickets.push(ticket);
+    nextNum++;
   }
-  return ticket;
+  return tickets;
 }
 
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT u.id, u.qr_code, u.type, u.status, u.deposit_amount, u.add_quantity,
+      `SELECT u.id, u.qr_code, u.type, u.status, u.deposit_amount, u.add_quantity, u.return_quantity,
               usr.username AS borrower_name
        FROM utensils u
        LEFT JOIN users usr ON u.current_borrower_id = usr.id
@@ -33,6 +40,7 @@ router.get('/', async (req, res) => {
       status: u.status,
       depositAmount: parseFloat(u.deposit_amount),
       addQuantity: u.add_quantity,
+      returnQuantity: u.return_quantity,
       borrowerName: u.borrower_name || null,
     })));
   } catch (err) {
@@ -52,7 +60,8 @@ router.get('/:qrCode', async (req, res) => {
     const u = result.rows[0];
     res.json({
       id: u.id, qrCode: u.qr_code, type: u.type,
-      status: u.status, depositAmount: parseFloat(u.deposit_amount), addQuantity: u.add_quantity,
+      status: u.status, depositAmount: parseFloat(u.deposit_amount),
+      addQuantity: u.add_quantity, returnQuantity: u.return_quantity,
     });
   } catch (err) {
     console.error(err);
@@ -60,6 +69,7 @@ router.get('/:qrCode', async (req, res) => {
   }
 });
 
+// 依 add_quantity 生成流水抽獎號碼後歸零
 router.post('/:id/restock', async (req, res) => {
   const utensilId = parseInt(req.params.id);
   const addQuantity = parseInt(req.body.addQuantity);
@@ -71,15 +81,39 @@ router.post('/:id/restock', async (req, res) => {
     await client.query('BEGIN');
     const ur = await client.query('SELECT * FROM utensils WHERE id = $1 FOR UPDATE', [utensilId]);
     if (ur.rows.length === 0) { await client.query('ROLLBACK'); return res.status(404).json({ success: false, message: 'Utensil not found' }); }
-    const tickets = [];
-    for (let i = 0; i < addQuantity; i++) {
-      const ticket = await generateUniqueLotteryNumber(client);
-      await client.query('INSERT INTO lottery_numbers (ticket_number, utensil_id) VALUES ($1, $2)', [ticket, utensilId]);
-      tickets.push(ticket);
-    }
+    const tickets = await generateSequentialTickets(client, addQuantity, utensilId);
     await client.query('UPDATE utensils SET add_quantity = 0 WHERE id = $1', [utensilId]);
     await client.query('COMMIT');
     res.json({ success: true, message: 'Restock done', generatedTickets: tickets });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// 依 return_quantity 生成流水抽獎號碼後歸零
+router.post('/:id/process-returns', async (req, res) => {
+  const utensilId = parseInt(req.params.id);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const ur = await client.query('SELECT * FROM utensils WHERE id = $1 FOR UPDATE', [utensilId]);
+    if (ur.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, message: 'Utensil not found' });
+    }
+    const returnQty = parseInt(ur.rows[0].return_quantity);
+    if (returnQty <= 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ success: false, message: 'No pending return_quantity to process' });
+    }
+    const tickets = await generateSequentialTickets(client, returnQty, utensilId);
+    await client.query('UPDATE utensils SET return_quantity = 0 WHERE id = $1', [utensilId]);
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Returns processed', generatedTickets: tickets, count: tickets.length });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
