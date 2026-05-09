@@ -68,6 +68,8 @@ async function initDb() {
     ['UTENSIL-006', 'Straw'],
     ['UTENSIL-007', 'Chopsticks'],
     ['UTENSIL-008', 'Spoon'],
+    ['tool 1', 'tool 1'],
+    ['tool 2', 'tool 2'],
   ];
   for (const [qrCode, type] of utensils) {
     await pool.query(

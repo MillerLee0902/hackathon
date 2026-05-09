@@ -28,23 +28,26 @@ fun StaffReturnScreen(onBack: () -> Unit) {
     val session = remember { SessionManager(context) }
     val scope = rememberCoroutineScope()
 
-    var step by remember { mutableIntStateOf(1) } // 1=掃用戶, 2=掃餐具, 3=完成
-    var userQrCode by remember { mutableStateOf("") }
+    // 流程：Step 1 = 掃餐具，Step 2 = 掃用戶，Step 3 = 完成
+    var step by remember { mutableIntStateOf(1) }
     var utensilQrCode by remember { mutableStateOf("") }
+    var userQrCode by remember { mutableStateOf("") }
     var resultMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var returnInfo by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
-    val userScanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-        if (result.contents != null) {
-            userQrCode = result.contents
-            if (userQrCode.startsWith("USER-")) step = 2
-        }
-    }
-
+    // Step 1：掃餐具
     val utensilScanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
         if (result.contents != null) {
             utensilQrCode = result.contents
+            step = 2
+        }
+    }
+
+    // Step 2：掃用戶
+    val userScanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+        if (result.contents != null) {
+            userQrCode = result.contents
         }
     }
 
@@ -68,16 +71,73 @@ fun StaffReturnScreen(onBack: () -> Unit) {
 
         // 步驟指示器
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StaffStepIndicator(number = 1, label = "掃用戶", isActive = step >= 1, isDone = step > 1, modifier = Modifier.weight(1f))
-            StaffStepIndicator(number = 2, label = "掃餐具", isActive = step >= 2, isDone = step > 2, modifier = Modifier.weight(1f))
+            StaffStepIndicator(number = 1, label = "掃餐具", isActive = step >= 1, isDone = step > 1, modifier = Modifier.weight(1f))
+            StaffStepIndicator(number = 2, label = "掃用戶", isActive = step >= 2, isDone = step > 2, modifier = Modifier.weight(1f))
             StaffStepIndicator(number = 3, label = "回收完成", isActive = step >= 3, isDone = false, modifier = Modifier.weight(1f))
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
         when (step) {
-            // ─── Step 1：掃用戶 QR ──────────────────────────────
+
+            // ─── Step 1：掃餐具 QR ──────────────────────────────
             1 -> {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("先掃描要回收的餐具 QR Code", fontSize = 13.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("步驟 1：掃描餐具 QR Code", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("掃描餐具上的 QR Code（例如 UTENSIL-001、tool 1）", fontSize = 14.sp, color = MaterialTheme.colorScheme.secondary)
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        val options = ScanOptions().apply {
+                            setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                            setPrompt("掃描餐具 QR Code")
+                            setBeepEnabled(true)
+                            setOrientationLocked(false)
+                        }
+                        utensilScanLauncher.launch(options)
+                    },
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                ) {
+                    Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("掃描餐具 QR Code", fontSize = 16.sp)
+                }
+            }
+
+            // ─── Step 2：掃用戶 QR ──────────────────────────────
+            2 -> {
+                // 顯示已識別的餐具
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                ) {
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("已識別餐具", fontSize = 13.sp, color = MaterialTheme.colorScheme.secondary)
+                            Text(utensilQrCode, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
                     modifier = Modifier.fillMaxWidth(),
@@ -90,7 +150,7 @@ fun StaffReturnScreen(onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("步驟 1：掃描用戶 QR Code", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text("步驟 2：掃描用戶 QR Code", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("掃描借用者手機上的個人 QR Code 以確認身分", fontSize = 14.sp, color = MaterialTheme.colorScheme.secondary)
                 Spacer(modifier = Modifier.height(24.dp))
@@ -113,116 +173,73 @@ fun StaffReturnScreen(onBack: () -> Unit) {
                     Text("掃描用戶 QR Code", fontSize = 16.sp)
                 }
 
-                if (userQrCode.isNotEmpty() && !userQrCode.startsWith("USER-")) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        "格式錯誤，請掃用戶個人 QR（非餐具）：$userQrCode",
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 13.sp,
-                    )
-                }
-            }
-
-            // ─── Step 2：掃餐具 QR ──────────────────────────────
-            2 -> {
-                // 顯示已識別的用戶
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                ) {
-                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text("已識別用戶", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
-                            Text(userQrCode, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-                Text("步驟 2：掃描餐具 QR Code", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("掃描要回收的餐具上的 QR Code", fontSize = 14.sp, color = MaterialTheme.colorScheme.secondary)
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        val options = ScanOptions().apply {
-                            setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                            setPrompt("掃描餐具上的 QR Code（UTENSIL-xxx）")
-                            setBeepEnabled(true)
-                            setOrientationLocked(false)
-                        }
-                        utensilScanLauncher.launch(options)
-                    },
-                    modifier = Modifier.fillMaxWidth().height(60.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                ) {
-                    Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("掃描餐具 QR Code", fontSize = 16.sp)
-                }
-
-                if (utensilQrCode.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("餐具 QR Code", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
-                            Text(utensilQrCode, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
+                if (userQrCode.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = {
-                            isLoading = true
-                            scope.launch {
-                                try {
-                                    val token = "Bearer ${session.getToken()}"
-                                    val response = RetrofitClient.api.staffReturn(
-                                        token, ReturnRequest(userQrCode, utensilQrCode)
-                                    )
-                                    if (response.isSuccessful && response.body()?.success == true) {
-                                        val body = response.body()!!
-                                        resultMessage = body.message ?: "回收成功！"
-                                        returnInfo = mapOf(
-                                            "借用者" to (body.borrowerName ?: ""),
-                                            "餐具種類" to (body.utensilType ?: ""),
-                                            "退回押金" to "\$${body.depositReturned ?: 0}",
-                                            "獲得點數" to "+${body.pointsEarned ?: 0} 點",
-                                            "用戶目前點數" to "${body.newPoints ?: 0} 點",
-                                            "用戶目前錢包" to "\$${body.newWalletBalance ?: 0}",
-                                        )
-                                        step = 3
-                                    } else {
-                                        resultMessage = response.body()?.message ?: "回收失敗"
-                                    }
-                                } catch (e: Exception) {
-                                    resultMessage = "連線失敗：${e.message}"
-                                } finally {
-                                    isLoading = false
-                                }
+                    if (!userQrCode.startsWith("USER-")) {
+                        Text(
+                            "格式錯誤，請掃用戶個人 QR（需為 USER-xxx）：$userQrCode",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 13.sp,
+                        )
+                    } else {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text("用戶 QR Code", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
+                                Text(userQrCode, fontWeight = FontWeight.Bold)
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(54.dp),
-                        enabled = !isLoading,
-                        shape = RoundedCornerShape(12.dp),
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
-                        } else {
-                            Icon(Icons.Default.Recycling, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("確認回收", fontSize = 16.sp)
                         }
-                    }
 
-                    if (resultMessage.isNotEmpty() && step != 3) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(resultMessage, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                isLoading = true
+                                scope.launch {
+                                    try {
+                                        val token = "Bearer ${session.getToken()}"
+                                        val response = RetrofitClient.api.staffReturn(
+                                            token, ReturnRequest(userQrCode, utensilQrCode)
+                                        )
+                                        if (response.isSuccessful && response.body()?.success == true) {
+                                            val body = response.body()!!
+                                            resultMessage = body.message ?: "回收成功！"
+                                            returnInfo = mapOf(
+                                                "借用者" to (body.borrowerName ?: ""),
+                                                "餐具種類" to (body.utensilType ?: ""),
+                                                "退回押金" to "\$${body.depositReturned?.toInt() ?: 0}",
+                                                "獲得點數" to "+${body.pointsEarned ?: 0} 點",
+                                                "用戶目前點數" to "${body.newPoints ?: 0} 點",
+                                                "用戶目前錢包" to "\$${body.newWalletBalance?.toInt() ?: 0}",
+                                            )
+                                            step = 3
+                                        } else {
+                                            resultMessage = response.body()?.message ?: "回收失敗"
+                                        }
+                                    } catch (e: Exception) {
+                                        resultMessage = "連線失敗：${e.message}"
+                                    } finally {
+                                        isLoading = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(54.dp),
+                            enabled = !isLoading,
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                            } else {
+                                Icon(Icons.Default.Recycling, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("確認回收", fontSize = 16.sp)
+                            }
+                        }
+
+                        if (resultMessage.isNotEmpty() && step != 3) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(resultMessage, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
+                        }
                     }
                 }
             }
@@ -270,8 +287,8 @@ fun StaffReturnScreen(onBack: () -> Unit) {
                     Button(
                         onClick = {
                             step = 1
-                            userQrCode = ""
                             utensilQrCode = ""
+                            userQrCode = ""
                             resultMessage = ""
                             returnInfo = emptyMap()
                         },

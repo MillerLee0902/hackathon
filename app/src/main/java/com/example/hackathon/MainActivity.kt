@@ -65,8 +65,6 @@ class MainActivity : ComponentActivity() {
                         // ─── 一般用戶頁面 ────────────────────────────────
                         composable("dashboard") {
                             DashboardScreen(
-                                onNavigateToBorrow = { navController.navigate("borrow") },
-                                onNavigateToReturn = { navController.navigate("return") },
                                 onNavigateToTransactions = { navController.navigate("transactions") },
                                 onLogout = {
                                     session.clearAll()
@@ -77,14 +75,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable("borrow") {
-                            BorrowScreen(onBack = { navController.popBackStack() })
-                        }
-
-                        composable("return") {
-                            ReturnScreen(onBack = { navController.popBackStack() })
-                        }
-
                         composable("transactions") {
                             TransactionScreen(onBack = { navController.popBackStack() })
                         }
@@ -92,6 +82,7 @@ class MainActivity : ComponentActivity() {
                         // ─── 店員頁面 ────────────────────────────────────
                         composable("staffDashboard") {
                             StaffDashboardScreen(
+                                onNavigateToBorrow = { navController.navigate("staffBorrow") },
                                 onNavigateToReturn = { navController.navigate("staffReturn") },
                                 onLogout = {
                                     navController.navigate("login") {
@@ -99,6 +90,10 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                             )
+                        }
+
+                        composable("staffBorrow") {
+                            StaffBorrowScreen(onBack = { navController.popBackStack() })
                         }
 
                         composable("staffReturn") {

@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun StaffDashboardScreen(
+    onNavigateToBorrow: () -> Unit,
     onNavigateToReturn: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -115,7 +116,7 @@ fun StaffDashboardScreen(
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             when (selectedTab) {
-                0 -> StaffHomeTab(onNavigateToReturn = onNavigateToReturn)
+                0 -> StaffHomeTab(onNavigateToBorrow = onNavigateToBorrow, onNavigateToReturn = onNavigateToReturn)
                 1 -> StaffTransactionsTab(transactions = transactions, isLoading = isLoading, errorMsg = errorMsg)
                 2 -> StaffUtensilsTab(utensils = utensils, isLoading = isLoading, errorMsg = errorMsg)
             }
@@ -126,7 +127,7 @@ fun StaffDashboardScreen(
 // ─── Tab 0：首頁 ────────────────────────────────────────────
 
 @Composable
-private fun StaffHomeTab(onNavigateToReturn: () -> Unit) {
+private fun StaffHomeTab(onNavigateToBorrow: () -> Unit, onNavigateToReturn: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -141,8 +142,8 @@ private fun StaffHomeTab(onNavigateToReturn: () -> Unit) {
                 Icon(Icons.Default.Eco, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("環保餐具回收系統", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text("掃描用戶 QR → 掃描餐具 QR 完成回收", fontSize = 13.sp, color = MaterialTheme.colorScheme.secondary)
+                    Text("環保餐具借還系統", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("先掃餐具 QR → 再掃用戶 QR 完成借出／回收", fontSize = 13.sp, color = MaterialTheme.colorScheme.secondary)
                 }
             }
         }
@@ -150,21 +151,37 @@ private fun StaffHomeTab(onNavigateToReturn: () -> Unit) {
         Text("快速操作", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = MaterialTheme.colorScheme.secondary)
 
         StaffActionButton(
-            icon = Icons.Default.QrCodeScanner,
+            icon = Icons.Default.ArrowForward,
+            title = "借出餐具",
+            subtitle = "掃餐具 QR → 掃用戶 QR 完成借出",
+            onClick = onNavigateToBorrow,
+            color = Color(0xFF1565C0),
+        )
+
+        StaffActionButton(
+            icon = Icons.Default.Recycling,
             title = "回收餐具",
-            subtitle = "掃 QR Code 為用戶辦理歸還",
+            subtitle = "掃餐具 QR → 掃用戶 QR 完成回收",
             onClick = onNavigateToReturn,
             color = MaterialTheme.colorScheme.primary,
         )
 
-        Text("說明", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = MaterialTheme.colorScheme.secondary)
+        Text("操作說明", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = MaterialTheme.colorScheme.secondary)
 
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("借出流程", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color(0xFF1565C0))
+                StaffGuideRow(step = "1", text = "點選「借出餐具」")
+                StaffGuideRow(step = "2", text = "掃描餐具上的 QR Code")
+                StaffGuideRow(step = "3", text = "請用戶開啟 App → 我的 QR Code")
+                StaffGuideRow(step = "4", text = "掃描用戶手機上的個人 QR Code")
+                StaffGuideRow(step = "5", text = "確認借出，系統自動扣押金 \$20")
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("回收流程", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
                 StaffGuideRow(step = "1", text = "點選「回收餐具」")
-                StaffGuideRow(step = "2", text = "請用戶開啟 App → 我的 QR Code")
-                StaffGuideRow(step = "3", text = "掃描用戶手機上的個人 QR Code")
-                StaffGuideRow(step = "4", text = "掃描餐具上的 QR Code（UTENSIL-001 等）")
+                StaffGuideRow(step = "2", text = "掃描餐具上的 QR Code")
+                StaffGuideRow(step = "3", text = "請用戶開啟 App → 我的 QR Code")
+                StaffGuideRow(step = "4", text = "掃描用戶手機上的個人 QR Code")
                 StaffGuideRow(step = "5", text = "確認回收，系統自動退押金 \$20 並加 1 點")
             }
         }

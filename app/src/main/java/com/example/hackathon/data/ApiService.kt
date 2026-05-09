@@ -41,6 +41,12 @@ interface ApiService {
 
     // ── 店員專用 API ──────────────────────────────────────
 
+    @POST("api/staff/borrow")
+    suspend fun staffBorrowUtensil(
+        @Header("Authorization") token: String,
+        @Body request: StaffBorrowRequest,
+    ): Response<StaffBorrowResponse>
+
     @POST("api/staff/return")
     suspend fun staffReturn(
         @Header("Authorization") token: String,
