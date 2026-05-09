@@ -21,7 +21,6 @@ async function initDb() {
     )
   `);
 
-  // 若資料表已存在（舊版本），補上新欄位
   await pool.query(`
     ALTER TABLE users
       ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE,
@@ -54,15 +53,28 @@ async function initDb() {
     )
   `);
 
-  // 初始餐具資料（已存在則跳過）
+  await pool.query(`
+    ALTER TABLE utensils
+      ADD COLUMN IF NOT EXISTS add_quantity INTEGER DEFAULT 0
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS lottery_numbers (
+      id SERIAL PRIMARY KEY,
+      ticket_number VARCHAR(10) UNIQUE NOT NULL,
+      utensil_id INTEGER REFERENCES utensils(id),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )
+  `);
+
   const utensils = [
-    ['UTENSIL-001', '環保筷子'],
+    ['UTENSIL-001', '環保笷子'],
     ['UTENSIL-002', '環保湯匙'],
     ['UTENSIL-003', '環保叉子'],
     ['UTENSIL-004', '環保餐盒'],
     ['UTENSIL-005', '環保杯子'],
     ['UTENSIL-006', '環保吸管'],
-    ['UTENSIL-007', '環保筷子'],
+    ['UTENSIL-007', '環保笷子'],
     ['UTENSIL-008', '環保湯匙'],
   ];
 
@@ -73,7 +85,7 @@ async function initDb() {
     );
   }
 
-  console.log('資料庫初始化完成');
+  console.log('DB init complete');
 }
 
 module.exports = { pool, initDb };
