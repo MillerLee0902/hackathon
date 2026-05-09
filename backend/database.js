@@ -14,18 +14,8 @@ async function initDb() {
       password_hash VARCHAR(255) NOT NULL,
       points INTEGER DEFAULT 0,
       wallet_balance DECIMAL(10,2) DEFAULT 100.00,
-      email_verified BOOLEAN DEFAULT FALSE,
-      verification_token VARCHAR(255),
-      verification_token_expires TIMESTAMP WITH TIME ZONE,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )
-  `);
-
-  await pool.query(`
-    ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE,
-      ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255),
-      ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP WITH TIME ZONE
   `);
 
   await pool.query(`
@@ -36,6 +26,7 @@ async function initDb() {
       status VARCHAR(50) DEFAULT 'available',
       current_borrower_id INTEGER REFERENCES users(id),
       deposit_amount DECIMAL(10,2) DEFAULT 20.00,
+      add_quantity INTEGER DEFAULT 0,
       borrowed_at TIMESTAMP WITH TIME ZONE
     )
   `);
@@ -54,11 +45,6 @@ async function initDb() {
   `);
 
   await pool.query(`
-    ALTER TABLE utensils
-      ADD COLUMN IF NOT EXISTS add_quantity INTEGER DEFAULT 0
-  `);
-
-  await pool.query(`
     CREATE TABLE IF NOT EXISTS lottery_numbers (
       id SERIAL PRIMARY KEY,
       ticket_number VARCHAR(10) UNIQUE NOT NULL,
@@ -68,23 +54,21 @@ async function initDb() {
   `);
 
   const utensils = [
-    ['UTENSIL-001', '環保笷子'],
-    ['UTENSIL-002', '環保湯匙'],
-    ['UTENSIL-003', '環保叉子'],
-    ['UTENSIL-004', '環保餐盒'],
-    ['UTENSIL-005', '環保杯子'],
-    ['UTENSIL-006', '環保吸管'],
-    ['UTENSIL-007', '環保笷子'],
-    ['UTENSIL-008', '環保湯匙'],
+    ['UTENSIL-001', 'Chopsticks'],
+    ['UTENSIL-002', 'Spoon'],
+    ['UTENSIL-003', 'Fork'],
+    ['UTENSIL-004', 'Lunchbox'],
+    ['UTENSIL-005', 'Cup'],
+    ['UTENSIL-006', 'Straw'],
+    ['UTENSIL-007', 'Chopsticks'],
+    ['UTENSIL-008', 'Spoon'],
   ];
-
   for (const [qrCode, type] of utensils) {
     await pool.query(
-      `INSERT INTO utensils (qr_code, type) VALUES ($1, $2) ON CONFLICT (qr_code) DO NOTHING`,
+      'INSERT INTO utensils (qr_code, type) VALUES ($1, $2) ON CONFLICT (qr_code) DO NOTHING',
       [qrCode, type]
     );
   }
-
   console.log('DB init complete');
 }
 
