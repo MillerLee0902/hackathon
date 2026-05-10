@@ -62,4 +62,23 @@ interface ApiService {
     suspend fun staffGetUtensils(
         @Header("Authorization") token: String,
     ): Response<StaffUtensilsResponse>
+
+    // ── 抽獎號碼 ──────────────────────────────────────────────
+    @GET("api/users/lottery-numbers")
+    suspend fun getMyLotteryNumbers(
+        @Header("Authorization") token: String,
+    ): Response<UserLotteryResponse>
+
+    // ── 點數兌換 ──────────────────────────────────────────────
+    @POST("api/users/redeem-qr")
+    suspend fun createRedeemQr(
+        @Header("Authorization") token: String,
+        @Body request: RedeemQrRequest,
+    ): Response<RedeemQrResponse>
+
+    @POST("api/staff/redeem")
+    suspend fun staffRedeem(
+        @Header("Authorization") token: String,
+        @Body request: StaffRedeemRequest,
+    ): Response<StaffRedeemResponse>
 }

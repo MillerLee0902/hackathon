@@ -33,6 +33,8 @@ import java.util.EnumMap
 @Composable
 fun DashboardScreen(
     onNavigateToTransactions: () -> Unit,
+    onNavigateToLottery: () -> Unit = {},
+    onNavigateToRedeem: () -> Unit = {},
     onNavigateToStaffDashboard: () -> Unit = {},
     onLogout: () -> Unit,
 ) {
@@ -227,6 +229,28 @@ fun DashboardScreen(
 
             Text("功能選單", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(12.dp))
+
+            // 抽獎號碼 + 兌換點數（兩欄）
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                MenuButton(
+                    modifier = Modifier.weight(1f),
+                    label = "抽獎號碼",
+                    icon = Icons.Default.ConfirmationNumber,
+                    onClick = onNavigateToLottery,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                )
+                MenuButton(
+                    modifier = Modifier.weight(1f),
+                    label = "兌換點數",
+                    icon = Icons.Default.Redeem,
+                    onClick = onNavigateToRedeem,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // 交易記錄（全寬）
             MenuButton(

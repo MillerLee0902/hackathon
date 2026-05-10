@@ -66,6 +66,8 @@ class MainActivity : ComponentActivity() {
                         composable("dashboard") {
                             DashboardScreen(
                                 onNavigateToTransactions = { navController.navigate("transactions") },
+                                onNavigateToLottery = { navController.navigate("lottery") },
+                                onNavigateToRedeem = { navController.navigate("redeem") },
                                 onNavigateToStaffDashboard = {
                                     navController.navigate("staffDashboard") {
                                         popUpTo("dashboard") { inclusive = true }
@@ -84,11 +86,20 @@ class MainActivity : ComponentActivity() {
                             TransactionScreen(onBack = { navController.popBackStack() })
                         }
 
+                        composable("lottery") {
+                            LotteryScreen(onBack = { navController.popBackStack() })
+                        }
+
+                        composable("redeem") {
+                            RedeemScreen(onBack = { navController.popBackStack() })
+                        }
+
                         // ─── 店員頁面 ────────────────────────────────────
                         composable("staffDashboard") {
                             StaffDashboardScreen(
                                 onNavigateToBorrow = { navController.navigate("staffBorrow") },
                                 onNavigateToReturn = { navController.navigate("staffReturn") },
+                                onNavigateToRedeem = { navController.navigate("staffRedeem") },
                                 onLogout = {
                                     navController.navigate("login") {
                                         popUpTo("staffDashboard") { inclusive = true }
@@ -103,6 +114,10 @@ class MainActivity : ComponentActivity() {
 
                         composable("staffReturn") {
                             StaffReturnScreen(onBack = { navController.popBackStack() })
+                        }
+
+                        composable("staffRedeem") {
+                            StaffRedeemScreen(onBack = { navController.popBackStack() })
                         }
                     }
                 }

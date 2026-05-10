@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 fun StaffDashboardScreen(
     onNavigateToBorrow: () -> Unit,
     onNavigateToReturn: () -> Unit,
+    onNavigateToRedeem: () -> Unit = {},
     onLogout: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -116,7 +117,7 @@ fun StaffDashboardScreen(
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             when (selectedTab) {
-                0 -> StaffHomeTab(onNavigateToBorrow = onNavigateToBorrow, onNavigateToReturn = onNavigateToReturn)
+                0 -> StaffHomeTab(onNavigateToBorrow = onNavigateToBorrow, onNavigateToReturn = onNavigateToReturn, onNavigateToRedeem = onNavigateToRedeem)
                 1 -> StaffTransactionsTab(transactions = transactions, isLoading = isLoading, errorMsg = errorMsg)
                 2 -> StaffUtensilsTab(utensils = utensils, isLoading = isLoading, errorMsg = errorMsg)
             }
@@ -127,7 +128,7 @@ fun StaffDashboardScreen(
 // ─── Tab 0：首頁 ────────────────────────────────────────────
 
 @Composable
-private fun StaffHomeTab(onNavigateToBorrow: () -> Unit, onNavigateToReturn: () -> Unit) {
+private fun StaffHomeTab(onNavigateToBorrow: () -> Unit, onNavigateToReturn: () -> Unit, onNavigateToRedeem: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -164,6 +165,14 @@ private fun StaffHomeTab(onNavigateToBorrow: () -> Unit, onNavigateToReturn: () 
             subtitle = "掃餐具 QR → 掃用戶 QR 完成回收",
             onClick = onNavigateToReturn,
             color = MaterialTheme.colorScheme.primary,
+        )
+
+        StaffActionButton(
+            icon = Icons.Default.Redeem,
+            title = "點數兌換",
+            subtitle = "掃描用戶兌換 QR Code 完成扣點",
+            onClick = onNavigateToRedeem,
+            color = Color(0xFF6A1B9A),
         )
 
         Text("操作說明", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = MaterialTheme.colorScheme.secondary)

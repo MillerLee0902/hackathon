@@ -64,6 +64,24 @@ async function initDb() {
     ALTER TABLE utensils ADD COLUMN IF NOT EXISTS return_quantity INTEGER DEFAULT 0
   `);
 
+  // Migration：lottery_numbers 加 user_id
+  await pool.query(`
+    ALTER TABLE lottery_numbers ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)
+  `);
+
+  // 點數兌換憑證表
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS redemption_tokens (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      points INTEGER NOT NULL,
+      token VARCHAR(64) UNIQUE NOT NULL,
+      status VARCHAR(20) DEFAULT 'pending',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      used_at TIMESTAMP WITH TIME ZONE
+    )
+  `);
+
   const utensils = [
     ['UTENSIL-001', 'Chopsticks'],
     ['UTENSIL-002', 'Spoon'],

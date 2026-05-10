@@ -131,3 +131,40 @@ data class StaffUtensilsResponse(
     val success: Boolean,
     val utensils: List<StaffUtensil>?,
 )
+
+// ── 抽獎號碼 ──────────────────────────────────────────────────
+
+data class LotteryTicket(
+    val id: Int,
+    val ticketNumber: String,
+    val utensilType: String,
+    val utensilQr: String,
+    val createdAt: String,
+)
+
+data class UserLotteryResponse(
+    val success: Boolean,
+    val total: Int,
+    val tickets: List<LotteryTicket>?,
+)
+
+// ── 點數兌換 ──────────────────────────────────────────────────
+
+data class RedeemQrRequest(val points: Int)
+
+data class RedeemQrResponse(
+    val success: Boolean,
+    val qrData: String?,
+    val points: Int?,
+    val message: String?,
+)
+
+data class StaffRedeemRequest(val qrData: String)
+
+data class StaffRedeemResponse(
+    val success: Boolean,
+    val message: String?,
+    val username: String?,
+    val pointsDeducted: Int?,
+    val newPoints: Int?,
+)

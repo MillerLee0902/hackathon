@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../database');
 const auth = require('../middleware/auth');
+const { generateSequentialTickets } = require('../utils/lottery');
 
 const router = express.Router();
 router.use(auth);
@@ -68,9 +69,20 @@ router.post('/return', async (req, res) => {
       "INSERT INTO transactions (user_id, utensil_id, action, points_earned, deposit_change, note) VALUES ($1, $2, 'return', 1, $3, $4)",
       [borrowerUserId, utensil.id, parseFloat(utensil.deposit_amount), 'Return ' + utensil.type]
     );
+    // 歸還獎勵：發一張流水抽獎號碼給歸還者
+    const tickets = await generateSequentialTickets(client, 1, utensil.id, borrowerUserId);
     await client.query('COMMIT');
     const b = updatedUser.rows[0];
-    res.json({ success: true, message: b.username + ' returned ' + utensil.type, borrowerName: b.username, pointsEarned: 1, depositReturned: parseFloat(utensil.deposit_amount), newPoints: b.points, newWalletBalance: parseFloat(b.wallet_balance) });
+    res.json({
+      success: true,
+      message: b.username + ' returned ' + utensil.type,
+      borrowerName: b.username,
+      pointsEarned: 1,
+      depositReturned: parseFloat(utensil.deposit_amount),
+      newPoints: b.points,
+      newWalletBalance: parseFloat(b.wallet_balance),
+      lotteryTicket: tickets[0],
+    });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);

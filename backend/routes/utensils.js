@@ -1,28 +1,10 @@
 const express = require('express');
 const { pool } = require('../database');
 const auth = require('../middleware/auth');
+const { generateSequentialTickets } = require('../utils/lottery');
 
 const router = express.Router();
 router.use(auth);
-
-// 流水編號：查目前最大號碼後依序累加
-async function generateSequentialTickets(client, count, utensilId) {
-  const maxRes = await client.query(
-    `SELECT COALESCE(MAX(CAST(ticket_number AS BIGINT)), 0) AS max_num FROM lottery_numbers`
-  );
-  let nextNum = parseInt(maxRes.rows[0].max_num) + 1;
-  const tickets = [];
-  for (let i = 0; i < count; i++) {
-    const ticket = String(nextNum).padStart(6, '0');
-    await client.query(
-      'INSERT INTO lottery_numbers (ticket_number, utensil_id) VALUES ($1, $2)',
-      [ticket, utensilId]
-    );
-    tickets.push(ticket);
-    nextNum++;
-  }
-  return tickets;
-}
 
 router.get('/', async (req, res) => {
   try {
